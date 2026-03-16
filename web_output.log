@@ -1,0 +1,16 @@
+
+> write-it-app@1.0.0 web
+> expo start --web
+
+Starting project at /app
+Starting Metro Bundler
+
+CommandError: It looks like you're trying to use TypeScript but don't have the required
+dependencies installed.
+
+Install typescript@~5.9.2, @types/react@~19.2.10 by running:
+
+npx expo install typescript @types/react
+
+If you're not using TypeScript, please remove the TypeScript files from your
+project
