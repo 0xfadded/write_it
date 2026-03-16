@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, Line, Circle } from 'react-native-svg';
 
 interface Point {
   x: number;
@@ -10,11 +10,21 @@ interface Point {
 
 interface DrawingCanvasProps {
   onStrokeEnd: (stroke: Point[]) => void;
+  targetStrokes?: string[];
+  currentStrokeIndex?: number;
+  clearTrigger?: number; // prop to clear internal state
 }
 
-export default function DrawingCanvas({ onStrokeEnd }: DrawingCanvasProps) {
+export default function DrawingCanvas({ onStrokeEnd, targetStrokes, currentStrokeIndex, clearTrigger }: DrawingCanvasProps) {
   const [currentPath, setCurrentPath] = useState<Point[]>([]);
   const [completedPaths, setCompletedPaths] = useState<Point[][]>([]);
+
+  React.useEffect(() => {
+    if (clearTrigger) {
+      setCurrentPath([]);
+      setCompletedPaths([]);
+    }
+  }, [clearTrigger]);
 
   const onGestureEvent = (event: any) => {
     const { x, y } = event.nativeEvent;
@@ -41,6 +51,15 @@ export default function DrawingCanvas({ onStrokeEnd }: DrawingCanvasProps) {
     return d;
   };
 
+  // Helper to get starting point of SVG path
+  const getStartingPoint = (d: string) => {
+    const match = d.match(/M\s*([\d.]+)[,\s]+([\d.]+)/i);
+    if (match) {
+      return { x: parseFloat(match[1]), y: parseFloat(match[2]) };
+    }
+    return null;
+  };
+
   return (
     <PanGestureHandler
       onGestureEvent={onGestureEvent}
@@ -48,23 +67,59 @@ export default function DrawingCanvas({ onStrokeEnd }: DrawingCanvasProps) {
       minDist={0}
     >
       <View style={styles.canvasContainer}>
-        <Svg height="100%" width="100%">
+        <Svg height="100%" width="100%" viewBox="0 0 100 100">
+          {/* Background Grid */}
+          <Line x1="0" y1="50" x2="100" y2="50" stroke="#444" strokeWidth="0.5" strokeDasharray="4 4" />
+          <Line x1="50" y1="0" x2="50" y2="100" stroke="#444" strokeWidth="0.5" strokeDasharray="4 4" />
+          <Line x1="0" y1="0" x2="100" y2="100" stroke="#444" strokeWidth="0.5" strokeDasharray="4 4" />
+          <Line x1="0" y1="100" x2="100" y2="0" stroke="#444" strokeWidth="0.5" strokeDasharray="4 4" />
+
+          {/* Target Strokes (Guided Mode) */}
+          {targetStrokes && targetStrokes.map((stroke, index) => {
+            const isCurrent = currentStrokeIndex === index;
+            const startPoint = isCurrent ? getStartingPoint(stroke) : null;
+            return (
+              <React.Fragment key={`target-${index}`}>
+                <Path
+                  d={stroke}
+                  stroke={isCurrent ? "#555" : "#333"} // Lighter for upcoming, slightly darker for current target
+                  strokeWidth="6"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity={index < (currentStrokeIndex || 0) ? 0.8 : 0.4}
+                />
+                {isCurrent && startPoint && (
+                  <Circle
+                    cx={startPoint.x}
+                    cy={startPoint.y}
+                    r="4"
+                    fill="#ccc"
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
+
+          {/* User's Completed Paths */}
           {completedPaths.map((path, index) => (
             <Path
-              key={index}
+              key={`user-completed-${index}`}
               d={createSvgPath(path)}
-              stroke="#000"
-              strokeWidth="5"
+              stroke="#eee"
+              strokeWidth="6"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           ))}
+
+          {/* User's Current Path (Drawing in progress) */}
           {currentPath.length > 0 && (
             <Path
               d={createSvgPath(currentPath)}
-              stroke="#007AFF"
-              strokeWidth="5"
+              stroke="#ccc"
+              strokeWidth="6"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -78,11 +133,11 @@ export default function DrawingCanvas({ onStrokeEnd }: DrawingCanvasProps) {
 
 const styles = StyleSheet.create({
   canvasContainer: {
-    width: 250,
-    height: 250,
-    backgroundColor: '#fff',
-    borderWidth: 2,
-    borderColor: '#ddd',
-    borderRadius: 15,
+    width: 300,
+    height: 300,
+    backgroundColor: '#1a1a1a',
+    borderWidth: 1,
+    borderColor: '#333',
+    borderRadius: 8,
   },
 });

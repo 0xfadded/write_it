@@ -19,6 +19,7 @@ export default function TestScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [strokesCount, setStrokesCount] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [clearTrigger, setClearTrigger] = useState(0);
 
   const dataList = alphabet && DATA_MAP[alphabet] ? DATA_MAP[alphabet] : [];
   const currentItem = dataList[currentIndex];
@@ -39,6 +40,11 @@ export default function TestScreen() {
     setShowAnswer(true);
   };
 
+  const handleClear = () => {
+    setStrokesCount(0);
+    setClearTrigger(prev => prev + 1);
+  };
+
   const nextQuestion = () => {
     setShowAnswer(false);
     setStrokesCount(0);
@@ -52,39 +58,40 @@ export default function TestScreen() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={styles.container}>
-        <Text style={styles.alphabetTitle}>
-          Practice: {alphabet?.toUpperCase()}
-        </Text>
-
-        <View style={styles.questionCard}>
-          <Text style={styles.promptText}>Draw the character for:</Text>
+        <View style={styles.header}>
           <Text style={styles.romajiText}>{currentItem.romaji}</Text>
+          <Text style={styles.alphabetTitle}>
+            {alphabet?.toLowerCase()}
+          </Text>
         </View>
 
-        <DrawingCanvas key={currentIndex} onStrokeEnd={handleStrokeEnd} />
+        <DrawingCanvas
+          key={currentIndex}
+          onStrokeEnd={handleStrokeEnd}
+          targetStrokes={currentItem.strokes}
+          currentStrokeIndex={strokesCount}
+          clearTrigger={clearTrigger}
+        />
 
-        <Text style={styles.strokeCount}>
-          Strokes drawn: {strokesCount} / {currentItem.strokes.length}
-        </Text>
+        <Text style={styles.helperText}>trace the character</Text>
+
+        <View style={styles.actions}>
+          <Pressable style={styles.actionButton} onPress={handleClear}>
+            <Text style={styles.actionIcon}>🗑️</Text>
+          </Pressable>
+          <Pressable style={styles.actionButton} onPress={checkAnswer}>
+            <Text style={styles.actionIcon}>👁️</Text>
+          </Pressable>
+          <Pressable style={styles.actionButton} onPress={nextQuestion}>
+            <Text style={styles.actionIcon}>➡️</Text>
+          </Pressable>
+        </View>
 
         {showAnswer && (
           <View style={styles.answerBox}>
-            <Text style={styles.answerLabel}>Correct Answer:</Text>
-            <Text style={styles.answerText}>{currentItem.char}</Text>
+            <Text style={styles.answerText}>Correct Answer: {currentItem.char}</Text>
           </View>
         )}
-
-        <View style={styles.actions}>
-          {!showAnswer ? (
-            <Pressable style={styles.button} onPress={checkAnswer}>
-              <Text style={styles.buttonText}>Check Answer</Text>
-            </Pressable>
-          ) : (
-            <Pressable style={StyleSheet.flatten([styles.button, styles.nextButton])} onPress={nextQuestion}>
-              <Text style={styles.buttonText}>Next Question</Text>
-            </Pressable>
-          )}
-        </View>
       </View>
     </GestureHandlerRootView>
   );
@@ -93,67 +100,51 @@ export default function TestScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#111',
     alignItems: 'center',
     padding: 20,
   },
-  alphabetTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#666',
-  },
-  questionCard: {
+  header: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 30,
+    marginTop: 20,
   },
-  promptText: {
-    fontSize: 18,
-    color: '#333',
+  alphabetTitle: {
+    fontSize: 16,
+    color: '#aaa',
   },
   romajiText: {
     fontSize: 48,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: '#fff',
+    marginBottom: 5,
   },
-  strokeCount: {
-    marginTop: 10,
+  helperText: {
+    marginTop: 30,
     fontSize: 16,
-    color: '#888',
+    color: '#aaa',
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '80%',
+    marginTop: 30,
+  },
+  actionButton: {
+    padding: 15,
+  },
+  actionIcon: {
+    fontSize: 24,
   },
   answerBox: {
     marginTop: 20,
-    alignItems: 'center',
-    backgroundColor: '#E6F4FE',
-    padding: 15,
-    borderRadius: 10,
-    width: '100%',
-  },
-  answerLabel: {
-    fontSize: 14,
-    color: '#666',
+    padding: 10,
+    backgroundColor: '#333',
+    borderRadius: 8,
   },
   answerText: {
-    fontSize: 48,
-    fontWeight: 'bold',
+    fontSize: 20,
     color: '#34C759',
-  },
-  actions: {
-    marginTop: 30,
-    width: '100%',
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  nextButton: {
-    backgroundColor: '#34C759',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
     fontWeight: 'bold',
   },
 });
