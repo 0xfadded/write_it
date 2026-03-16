@@ -18,6 +18,7 @@ interface DrawingCanvasProps {
 export default function DrawingCanvas({ onStrokeEnd, targetStrokes, currentStrokeIndex, clearTrigger }: DrawingCanvasProps) {
   const [currentPath, setCurrentPath] = useState<Point[]>([]);
   const [completedPaths, setCompletedPaths] = useState<Point[][]>([]);
+  const [isDrawing, setIsDrawing] = useState(false);
 
   React.useEffect(() => {
     if (clearTrigger) {
@@ -60,14 +61,51 @@ export default function DrawingCanvas({ onStrokeEnd, targetStrokes, currentStrok
     return null;
   };
 
+  // Fallback for web mouse/touch events outside of gesture handler
+  const handlePointerDown = (e: any) => {
+    setIsDrawing(true);
+    // The native layout is 300x300, viewbox is 100x100
+    // e.nativeEvent.offsetX/Y are specific to web, e.nativeEvent.locationX/Y work on mobile
+    const rawX = e.nativeEvent.offsetX ?? e.nativeEvent.locationX ?? 0;
+    const rawY = e.nativeEvent.offsetY ?? e.nativeEvent.locationY ?? 0;
+    const x = (rawX / 300) * 100;
+    const y = (rawY / 300) * 100;
+    setCurrentPath([{ x, y }]);
+  };
+
+  const handlePointerMove = (e: any) => {
+    if (!isDrawing) return;
+    const rawX = e.nativeEvent.offsetX ?? e.nativeEvent.locationX ?? 0;
+    const rawY = e.nativeEvent.offsetY ?? e.nativeEvent.locationY ?? 0;
+    const x = (rawX / 300) * 100;
+    const y = (rawY / 300) * 100;
+    setCurrentPath(prev => [...prev, { x, y }]);
+  };
+
+  const handlePointerUp = () => {
+    if (!isDrawing) return;
+    setIsDrawing(false);
+    if (currentPath.length > 0) {
+      setCompletedPaths(prev => [...prev, currentPath]);
+      onStrokeEnd(currentPath);
+      setCurrentPath([]);
+    }
+  };
+
   return (
     <PanGestureHandler
       onGestureEvent={onGestureEvent}
       onHandlerStateChange={onHandlerStateChange}
       minDist={0}
     >
-      <View style={styles.canvasContainer}>
-        <Svg height="100%" width="100%" viewBox="0 0 100 100">
+      <View
+        style={styles.canvasContainer}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
+      >
+        <Svg height="100%" width="100%" viewBox="0 0 100 100" style={{ touchAction: 'none' } as any}>
           {/* Background Grid */}
           <Line x1="0" y1="50" x2="100" y2="50" stroke="#444" strokeWidth="0.5" strokeDasharray="4 4" />
           <Line x1="50" y1="0" x2="50" y2="100" stroke="#444" strokeWidth="0.5" strokeDasharray="4 4" />
