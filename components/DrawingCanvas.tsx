@@ -64,12 +64,12 @@ export default function DrawingCanvas({ onStrokeEnd, targetStrokes, currentStrok
   // Fallback for web mouse/touch events outside of gesture handler
   const handlePointerDown = (e: any) => {
     setIsDrawing(true);
-    // The native layout is 300x300, viewbox is 100x100
+    // The native layout is 300x300, viewbox is 109x109
     // e.nativeEvent.offsetX/Y are specific to web, e.nativeEvent.locationX/Y work on mobile
     const rawX = e.nativeEvent.offsetX ?? e.nativeEvent.locationX ?? 0;
     const rawY = e.nativeEvent.offsetY ?? e.nativeEvent.locationY ?? 0;
-    const x = (rawX / 300) * 100;
-    const y = (rawY / 300) * 100;
+    const x = (rawX / 300) * 109;
+    const y = (rawY / 300) * 109;
     setCurrentPath([{ x, y }]);
   };
 
@@ -77,8 +77,8 @@ export default function DrawingCanvas({ onStrokeEnd, targetStrokes, currentStrok
     if (!isDrawing) return;
     const rawX = e.nativeEvent.offsetX ?? e.nativeEvent.locationX ?? 0;
     const rawY = e.nativeEvent.offsetY ?? e.nativeEvent.locationY ?? 0;
-    const x = (rawX / 300) * 100;
-    const y = (rawY / 300) * 100;
+    const x = (rawX / 300) * 109;
+    const y = (rawY / 300) * 109;
     setCurrentPath(prev => [...prev, { x, y }]);
   };
 
@@ -105,12 +105,12 @@ export default function DrawingCanvas({ onStrokeEnd, targetStrokes, currentStrok
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
       >
-        <Svg height="100%" width="100%" viewBox="0 0 100 100" style={{ touchAction: 'none' } as any}>
+        <Svg height="100%" width="100%" viewBox="0 0 109 109" style={{ touchAction: 'none' } as any}>
           {/* Background Grid */}
-          <Line x1="0" y1="50" x2="100" y2="50" stroke="#444" strokeWidth="0.5" strokeDasharray="4 4" />
-          <Line x1="50" y1="0" x2="50" y2="100" stroke="#444" strokeWidth="0.5" strokeDasharray="4 4" />
-          <Line x1="0" y1="0" x2="100" y2="100" stroke="#444" strokeWidth="0.5" strokeDasharray="4 4" />
-          <Line x1="0" y1="100" x2="100" y2="0" stroke="#444" strokeWidth="0.5" strokeDasharray="4 4" />
+          <Line x1="0" y1="54.5" x2="109" y2="54.5" stroke="#444" strokeWidth="0.5" strokeDasharray="4 4" />
+          <Line x1="54.5" y1="0" x2="54.5" y2="109" stroke="#444" strokeWidth="0.5" strokeDasharray="4 4" />
+          <Line x1="0" y1="0" x2="109" y2="109" stroke="#444" strokeWidth="0.5" strokeDasharray="4 4" />
+          <Line x1="0" y1="109" x2="109" y2="0" stroke="#444" strokeWidth="0.5" strokeDasharray="4 4" />
 
           {/* Target Strokes (Guided Mode) */}
           {targetStrokes && targetStrokes.map((stroke, index) => {
